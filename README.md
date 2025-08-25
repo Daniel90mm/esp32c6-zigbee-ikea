@@ -1,3 +1,9 @@
+# Motivation for dette
+Min motivation stammer fra jeg ejer en Ikea TRÅDFRI pære som styres via en lille controller man fik med i pakken. Den er cool nok, men meget simpel. Jeg savner at jeg kan styre mit lys derhjemme via mine egne kommandoer der afhænger af tidspunktet, alarmer fra min mobil, notifikation fra min computer eller mobil.  
+  
+Alt er vel muligt, og det virker fedt at prøve grave ned i det. ChatGPT, Claude, Gemini osv. var til ikke så megen hjælp, så jeg vil prøve skrive det hele op for at få overblik over hvad det er jeg rent faktisk laver :).
+
+
 # Fundamentale funktioner
 For at få ZB til at fungere, skal pakken inkluderes med:
 ```C
