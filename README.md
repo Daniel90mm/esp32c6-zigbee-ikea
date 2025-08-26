@@ -5,7 +5,7 @@ Alt er vel muligt, og det virker fedt at prøve grave ned i det. ChatGPT, Claude
 
 
 # Fundamentale funktioner
-For at få ZB til at fungere, skal pakken inkluderes med:
+For at få ZB til at fungere, skal biblioteket inkluderes med:
 ```C
 #include "Zigbee.h"
 ```
