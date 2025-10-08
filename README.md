@@ -1,3 +1,11 @@
+# Introduktion
+Motivation var at jeg gerne ville styre min pære i mit kollegieværelse via min pc og mobil.  
+  
+Jeg ville også senere, hvis ikke allerede implementeret, at få en slags "alarm" som vækker mig nemmere om morgenen, ved at tænde for pæren ved den højeste temperatur (kelvin), og højeste lysstyrke (lumen).
+
+ESP32 er en C6 model, så den understøtter Zigbee, en teknologi som tillader at man kan kommunikere med sensorer via en enkelt device.  
+
+
 # LED - Neopixel
 For at starte LED'en, skal man inkludere biblioteket og følgende kode:  
 ```C
