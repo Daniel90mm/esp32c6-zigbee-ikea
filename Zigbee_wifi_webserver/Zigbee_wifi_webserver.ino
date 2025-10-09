@@ -1,4 +1,4 @@
-#include "esp_coexist.h" 
+#include "esp_coexist.h" // Sørger for at wifi og zigbee kan være tændt samtidigt
 #include <Adafruit_NeoPixel.h>
 #include <WiFi.h>
 #include <WebServer.h>
@@ -8,7 +8,7 @@
 #define ZIGBEE_MODE_ZCZR
 #define NUMPIXELS 1
 #define PIN 8
-#define EP_SWITCH 5
+#define EP_SWITCH 5 // ikea pære endpoint
 
 Adafruit_NeoPixel pixel(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
 
@@ -19,50 +19,43 @@ String outputState = "off";
 
 WebServer server(80);
 ZigbeeColorDimmerSwitch zbSwitch(EP_SWITCH);
+ZigbeeColorDimmableLight zbColorLight(EP_SWITCH);
 
 bool blinked = false;
-int ledState = LOW;        // husker LED'ens nuværende tilstand
-int buttonState;           // den nuværende knaptilstand
-int lastButtonState = LOW; // husker forrige knaptilstand
-
-unsigned long lastDebounceTime = 0;  
-unsigned long debounceDelay = 50;    // 50 ms debounce
-
 int brightness;
 int kelvin;
 
-void toggleBOOTButton() {
-  int reading = digitalRead(BOOT_PIN);
-  
-  if (reading != lastButtonState) {
-    lastDebounceTime = millis();
-  }
-  
-  if ((millis() - lastDebounceTime) > debounceDelay) {
-    if (reading != buttonState) {
-      buttonState = reading;
-      
-      if (buttonState == LOW) {  
-        ledState = !ledState;
-        
-        if (ledState == HIGH){
-          zbSwitch.lightOn();
-          pixel.setPixelColor(0, pixel.Color(0, 0, 10));
-          pixel.show();
-        } else {
-          zbSwitch.lightOff();
-          pixel.clear();
-          pixel.show();
-        }
-      }
-    }
-  }
-  
-  lastButtonState = reading;
-}
-
-void pulseLED() {
+void pulseLED(String color) {
   int i;
+  if (color == "red") {
+  for (i = 0; i < 256; i++) {
+    pixel.setPixelColor(0, pixel.Color(i, 0, 0)); 
+    pixel.show();
+  }
+
+  for (i = 256; i > 0; i--) {
+    pixel.setPixelColor(0, pixel.Color(i, 0, 0));
+    pixel.show();
+    }
+  pixel.clear();
+  pixel.show();
+  }
+
+  if (color == "green") {
+  for (i = 0; i < 256; i++) {
+    pixel.setPixelColor(0, pixel.Color(0, i, 0)); 
+    pixel.show();
+  }
+
+  for (i = 256; i > 0; i--) {
+    pixel.setPixelColor(0, pixel.Color(0, i, 0));
+    pixel.show();
+    }
+  pixel.clear();
+  pixel.show();
+  }
+
+  if (color == "blue") {
   for (i = 0; i < 256; i++) {
     pixel.setPixelColor(0, pixel.Color(0, 0, i)); 
     pixel.show();
@@ -71,33 +64,31 @@ void pulseLED() {
   for (i = 256; i > 0; i--) {
     pixel.setPixelColor(0, pixel.Color(0, 0, i));
     pixel.show();
+    }
+  pixel.clear();
+  pixel.show();
   }
 
-  delay(700);
-}
-
-void blinkThree() { 
-  for(uint8_t i=0; i<3; i++) { 
-    pixel.setPixelColor(0, pixel.Color(0, 90, 0));
-    pixel.show();
-    delay(150); 
-    pixel.clear();
-    pixel.show(); 
-    delay(150);
-    } 
 }
 
 void handleSetBulb() {
   // Læs parametrene fra URL'en
   if (server.hasArg("brightness")) {
     int brightness = server.arg("brightness").toInt();
-    zbSwitch.setLightLevel(map(brightness, 0, 1055, 0, 255));  
+    int mappedBrightness = map(brightness, 0, 1055, 0, 255)
+
+    if (mappedBrightness < 7){
+      zbSwitch.lightOff();
+    }
+    else {
+      zbSwitch.lightOn();
+      zbSwitch.setLightLevel(mappedBrightness);  
+    }
   }
   
   if (server.hasArg("temperature")) {
     byte r, g, b;
     int kelvin = server.arg("temperature").toInt();
-    //zbSwitch.setLightColor(r, g, b);
   }
   
   server.send(200, "text/plain", "OK");
@@ -123,7 +114,9 @@ void handleRoot() {
   html += "<head>";
   html += "<script>";
   html += "function updateBulb() {";
-  html += "  var brightness = document.getElementById('brightness').value;";
+  html += "  var sliderVal = document.getElementById('brightness').value;";
+  html += "  var brightness = Math.pow(sliderVal / 1055, 2) * 1055;"; // ekstra følsomhed for slider ved lave værdier
+  html += "  brightness = Math.round(brightness);";
   html += "  var temp = document.getElementById('temperature').value;";
   html += "  var url = '/set?brightness=' + brightness + '&temperature=' + temp;";  
   html += "  fetch(url);";
@@ -137,6 +130,7 @@ void handleRoot() {
   html += "<style>";
   html += "body { font-family: Helvetica; text-align: center; }";
   html += ".slider-container { margin: 20px; }";
+  html += "input[type='range'] { width: 80%; height: 30px; }";
   html += "</style>";
   html += "</head>";
   
@@ -158,10 +152,12 @@ void handleRoot() {
   server.send(200, "text/html", html);
 }
 
-void setBulbTemperature(int kelvin) {
-  
+void setBulbTemperature() {
+  espRgbColor_t zbColor = zbColorLight.getLightColor();
+  Serial.println(zbColor);
 
 }
+
 void setup() {
 
   Serial.begin(115200);
@@ -187,15 +183,13 @@ void setup() {
 
 void loop() {
 
-  toggleBOOTButton();
-
-  if(!zbSwitch.bound()) {
-    pulseLED();
+  if(!zbSwitch.bound()) { // Hvis zigbee ikke forbundet
+    pulseLED("red");
   }
 
   if(!blinked && zbSwitch.bound()) { 
     Serial.println("Pære forbundet");   
-    blinkThree(); 
+    pulseLED("green"); 
     blinked = true; 
     }
 
