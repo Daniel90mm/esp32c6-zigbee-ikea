@@ -12,8 +12,8 @@
 
 Adafruit_NeoPixel pixel(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
 
-const char* ssid = "BeepBoopNet";
-const char* password = "TKY7DEWKNZ";  
+const char* ssid = "...";
+const char* password = "...";  
 
 String outputState = "off";
 
@@ -75,9 +75,9 @@ void handleSetBulb() {
   // Læs parametrene fra URL'en
   if (server.hasArg("brightness")) {
     int brightness = server.arg("brightness").toInt();
-    int mappedBrightness = map(brightness, 0, 1055, 0, 255)
+    int mappedBrightness = map(brightness, 0, 1055, 0, 255);
 
-    if (mappedBrightness < 7){
+    if (mappedBrightness < 3){
       zbSwitch.lightOff();
     }
     else {
@@ -159,7 +159,6 @@ void setBulbTemperature() {
 }
 
 void setup() {
-
   Serial.begin(115200);
   pixel.begin();
   initWiFi();
@@ -184,7 +183,7 @@ void setup() {
 void loop() {
 
   if(!zbSwitch.bound()) { // Hvis zigbee ikke forbundet
-    pulseLED("red");
+    pulseLED("blue");
   }
 
   if(!blinked && zbSwitch.bound()) { 
