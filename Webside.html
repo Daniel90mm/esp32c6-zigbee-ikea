@@ -2,36 +2,43 @@
 <html>
 <head>
   <script>
+    let debounceTimer;
     function updateBulb() {
-      var brightness = document.getElementById('brightness').value
+      var sliderVal = document.getElementById('brightness').value;
+      var brightness = Math.pow(sliderVal / 1055, 2) * 1055; // extra sensitivity, needs improvement
+      brightness = Math.round(brightness);
       var temp = document.getElementById('temperature').value;
-      var url = '/set?brightness=' + brightness + '&temperature=' + temp;
-      fetch(url);
       document.getElementById('brightnessValue').innerText = brightness;
       document.getElementById('tempValue').innerText = temp;
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(function() {
+        var url = '/set?brightness=' + brightness + '&temperature=' + temp;
+        fetch(url);
+      }, 300);
     }
   </script>
- 
+  
   <meta name="viewport" content="width=device-width, initial-scale=1">
- 
+  
   <style>
     body { font-family: Helvetica; text-align: center; }
     .slider-container { margin: 20px; }
+    input[type='range'] { width: 80%; height: 30px; }
   </style>
 </head>
- 
+
 <body>
   <h1>Light Bulb Control</h1>
- 
+  
   <div class="slider-container">
     <label>Brightness: <span id="brightnessValue">500</span> lumens</label><br>
     <input type="range" id="brightness" min="0" max="1055" value="500" onchange="updateBulb()">
   </div>
- 
+  
   <div class="slider-container">
     <label>Temperature: <span id="tempValue">3500</span> K</label><br>
     <input type="range" id="temperature" min="2700" max="10000" value="3500" onchange="updateBulb()">
   </div>
- 
+  
 </body>
 </html>
