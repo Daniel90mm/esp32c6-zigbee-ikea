@@ -1,4 +1,6 @@
 # Introduktion
+Only in danish.
+
 Motivation var at jeg gerne ville styre min pære i mit kollegieværelse via min pc og mobil.  
   
 Jeg ville også senere, hvis ikke allerede implementeret, at få en slags "alarm" som vækker mig nemmere om morgenen, ved at tænde for pæren ved den højeste temperatur (kelvin), og højeste lysstyrke (lumen).
