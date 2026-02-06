@@ -1,47 +1,46 @@
-# Introduktion
-Only in danish.
+# Introduction
 
-Motivation var at jeg gerne ville styre min pære i mit kollegieværelse via min pc og mobil.  
-  
-Jeg ville også senere, hvis ikke allerede implementeret, at få en slags "alarm" som vækker mig nemmere om morgenen, ved at tænde for pæren ved den højeste temperatur (kelvin), og højeste lysstyrke (lumen).
+The motivation was that I wanted to control my light bulb in my dorm room via my PC and phone.
 
-ESP32 er en C6 model, så den understøtter Zigbee, en teknologi som tillader at man kan kommunikere med sensorer via en enkelt device.  
+I also wanted to later, if not already implemented, create a kind of "alarm" that wakes me up more easily in the morning by turning on the bulb at the highest color temperature (kelvin) and highest brightness (lumen).
+
+The ESP32 is a C6 model, so it supports Zigbee, a technology that allows communication with sensors via a single device.
 
 
 # LED - Neopixel
-For at starte LED'en, skal man inkludere biblioteket og følgende kode:  
+To initialize the LED, you need to include the library and the following code:
 ```C
-#include <Adafruit_NeoPixel.h>      // Behøves faktisk ikke være dette bibliotek, men dette virker
-#define NUMPIXELS 1                 // Antallet af pixels, kun en på ESP32'eren
-#define PIN 8                       // LED'en er forbundet til pin 8
+#include <Adafruit_NeoPixel.h>      // Doesn't actually have to be this library, but this one works
+#define NUMPIXELS 1                 // Number of pixels, only one on the ESP32
+#define PIN 8                       // The LED is connected to pin 8
 Adafruit_NeoPixel pixel(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
-```  
-  
-  
-Derefter kan man styre LED'en med disse funktioner:  
+```
+
+
+Then you can control the LED with these functions:
 ```C
-pixel.begin();                                  // Obligatorisk
+pixel.begin();                                  // Required
 
-pixel.setPixelColor(0, pixel.Color(60, 0, 0));  // pixel.setPixelColor(0, ...) sætter farven for LED nummer 0
-                                                // pixel.Color(60, 0, 0) sætter farven til 
-                                                // rød 60/255, grøn 0/255 og blå 0/255
-                                                
-pixel.show();                                   // Bruges til at opdatere LED, altså efter man har kørt 
-                                                // setPixelColor og clear()
+pixel.setPixelColor(0, pixel.Color(60, 0, 0));  // pixel.setPixelColor(0, ...) sets the color for LED number 0
+                                                // pixel.Color(60, 0, 0) sets the color to
+                                                // red 60/255, green 0/255 and blue 0/255
 
-pixel.clear();                                  // Slukker LED
-``` 
+pixel.show();                                   // Used to update the LED, i.e. after running
+                                                // setPixelColor and clear()
+
+pixel.clear();                                  // Turns off the LED
+```
 
 # Wifi
-Først, skal man importere biblioteket:  
+First, you need to import the library:
 ```C
 #include <WiFi.h>
 ```
-Generelt at have denne funktion og rækkefølge som køres i setup(), burde få alt til at virke:  
-```C  
+Generally, having this function and sequence run in setup() should make everything work:
+```C
 const char* ssid = "...";
-const char* password = "...";  
-  
+const char* password = "...";
+
 void initWiFi() {
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
@@ -53,76 +52,76 @@ void initWiFi() {
   Serial.println(WiFi.localIP());
 }
 ```
-#### Wifi statisk IP
-Det kan være at man får tilfældig adresse hver gang pga. DHCP (Dynamic Host Configuration Protocol), så for at få den samme hver gang, skal man bruge dette udenfor ``setup()`` og ``loop()``
+#### Wifi Static IP
+You might get a random address each time due to DHCP (Dynamic Host Configuration Protocol), so to get the same address every time, use this outside of ``setup()`` and ``loop()``
 ```C
 if (!WiFi.config(local_IP, gateway, subnet, primaryDNS, secondaryDNS)) {
-    Serial.println("Fejl i konfigurering")
+    Serial.println("Configuration error")
 }
 ```
-Her er forklaring af parametre, de to sidste parametre er ikke nødvendige:
+Here is an explanation of the parameters, the last two parameters are not required:
 ```C
-// Statisk IP-adresse, må ikke være en brugt IP-adresse! Helst imellem 192.168.1.180-199
-IPAddress local_IP(192, 168, 1, 184);   
-  
-// Gateway IP-adresse, dette er IP-adressen på den forbundne router
-IPAddress gateway(192, 168, 8, 1); // På GLi-net router
+// Static IP address, must not be an already used IP address! Preferably between 192.168.1.180-199
+IPAddress local_IP(192, 168, 1, 184);
 
-// Definerer netværksmasken, fortæller hvilke IP'er der er lokale. 
-// (255, 255, 255, 0) Betyder kun IP'er med de samme 3 første tal er lokale, denne er standard
-// (255, 255, 0, 0) Betyder hele 192.168.. er lokalt.
+// Gateway IP address, this is the IP address of the connected router
+IPAddress gateway(192, 168, 8, 1); // On GLi-net router
+
+// Defines the subnet mask, tells which IPs are local.
+// (255, 255, 255, 0) Means only IPs with the same first 3 octets are local, this is the default
+// (255, 255, 0, 0) Means the entire 192.168.x.x range is local.
 IPAddress subnet(255, 255, 0, 0);
 
-// Ikke vigtigt, kan bare være dette
+// Not important, can just be this
 IPAddress primaryDNS(8, 8, 8, 8);   // Google DNS
 IPAddress secondaryDNS(8, 8, 4, 4); // Google DNS
 ```
-#### Wifi status
-I tabellen under forklares det som funktionen wifi.status() returnerer:
+#### Wifi Status
+The table below explains what the function wifi.status() returns:
 ```C
 WiFi.status()
 ```
-|Værdi|String|Betydning|  
-|-|-|-|  
-|0|`WL_IDLE_STATUS`|Status givet når `WiFi.begin()` er kaldet|
-|1|`WL_NO_SSID_AVAIL`|Ingen SSID er tilgængelige|
-|2|`WL_SCAN_COMPLETED`|Scan networks er færdigt|
-|3|`WL_CONNECTED`|Forbundet til netværk|
-|4|`WL_CONNECT_FAILED`|Alle forsøg for forbindelse fejler|
-|5|`WL_CONNECTION_LOST`|Forbindelse tabt|
-|6|`WL_DISCONNECTED`|Afbrudt fra netværk|
+|Value|String|Meaning|
+|-|-|-|
+|0|`WL_IDLE_STATUS`|Status given when `WiFi.begin()` has been called|
+|1|`WL_NO_SSID_AVAIL`|No SSIDs are available|
+|2|`WL_SCAN_COMPLETED`|Network scan is complete|
+|3|`WL_CONNECTED`|Connected to a network|
+|4|`WL_CONNECT_FAILED`|All connection attempts failed|
+|5|`WL_CONNECTION_LOST`|Connection lost|
+|6|`WL_DISCONNECTED`|Disconnected from network|
 
-#### Wifi modes
+#### Wifi Modes
 ```C
-WiFi.mode(WIFI_STA);    // Station mode, ESP32 forbinder til et access point
-WiFi.mode(WIFI_AP);     // Access point mode, enheder kan forbinde til ESP32
-WiFi.mode(WIFI_AP_STA); // Access point og station forbundet til et andet access point
+WiFi.mode(WIFI_STA);    // Station mode, ESP32 connects to an access point
+WiFi.mode(WIFI_AP);     // Access point mode, devices can connect to the ESP32
+WiFi.mode(WIFI_AP_STA); // Access point and station connected to another access point
 ```
-#### Wifi localip
-Funktionen her returnerer bare den lokale ip som man kan tilgå med en browser:  
+#### Wifi Local IP
+This function simply returns the local IP that can be accessed with a browser:
 ```C
-WiFi.localIP(); // returnerer f.eks. 192.168.8.227
+WiFi.localIP(); // returns e.g. 192.168.8.227
 ```
-# Webserver
-Først inkluderer man biblioteket:  
+# Web Server
+First, include the library:
 ```C
 #include <WebServer.h>
 ```
-Generelt at have denne funktion og rækkefølge som køres i setup(), burde få alt til at virke:  
+Generally, having this function and sequence run in setup() should make everything work:
 ```C
-WebServer server(80); 
+WebServer server(80);
 
 
-// Funktioner til at håndtere tryk på knapper eller andre aktioner på root
+// Functions to handle button presses or other actions on root
 void Off() {
   outputState = "off";
-  // Gør noget her, blink LED, whatever
+  // Do something here, blink LED, whatever
   handleRoot();
 }
 
 void On() {
   outputState = "on";
-  // Gør noget her, blink LED, whatever
+  // Do something here, blink LED, whatever
   handleRoot();
 }
 
@@ -135,7 +134,7 @@ void handleRoot() {
   html += ".button2 { background-color: #555555; }</style></head>";
   html += "<body><h1>ESP32 Web Server</h1>";
 
-  // Vis controls
+  // Show controls
   html += "<p>Neopixel LED state: " + outputState + "</p>";
   if (outputState == "off") {
     html += "<p><a href=\"/on\"><button class=\"button\">ON</button></a></p>";
@@ -150,20 +149,20 @@ void handleRoot() {
 void setup() {
   Serial.begin(115200);
 
-  // Klargør neopixel
+  // Initialize neopixel
 
   // Clear neopixel
 
   /*
 
-    Her er al wifi kode fra før
+    All wifi code from before goes here
 
   */
 
   // Set up the web server to handle different routes
-  server.on("/", handleRoot);       // Base-case, kører konstant, og tjekker om tryk er sket
-  server.on("/on", On);             // Kører On() funktion
-  server.on("/off", Off);           // Kører Off() funktion
+  server.on("/", handleRoot);       // Base case, runs constantly, checks if a button was pressed
+  server.on("/on", On);             // Runs On() function
+  server.on("/off", Off);           // Runs Off() function
 
   // Start the web server
   server.begin();
@@ -176,123 +175,123 @@ void loop() {
 }
 
 ```
-Derefter laves et webserver objekt på port 80 kaldet ``server``:  
+Then a web server object is created on port 80 called ``server``:
 ```C
 WebServer server(80);
 ```
-Hvis man vil lave en knap på siden, f.eks. til at tænde en LED, vil hver knap føre til en forlængelse af URL'en, altså, hvis IP var 192.168.1.1 så det der hedder root være:  
-1. ``192.168.1.1/``            <--- root
-2. ``192.168.1.1/Knap1_ON``    <--- Tryk på knap 1
-3. ``192.168.1.1/Knap1_OFF``   <--- Tryk på knap 1 igen
-Derfor, skal man sætte webserveren op til at kunne klare alle sider, med knap eksemplet:  
+If you want to create a button on the page, e.g. to turn on an LED, each button will lead to an extension of the URL. So if the IP was 192.168.1.1, what is called root would be:
+1. ``192.168.1.1/``              <--- root
+2. ``192.168.1.1/Button1_ON``    <--- Press button 1
+3. ``192.168.1.1/Button1_OFF``   <--- Press button 1 again
+Therefore, you need to set up the web server to handle all pages. With the button example:
 ```C
 server.on("/", handleRoot);
-server.on("/Knap1_ON", handleKnap1ON);
-server.on("/Knap1_OFF", handleKnap1OFF);
+server.on("/Button1_ON", handleButton1ON);
+server.on("/Button1_OFF", handleButton1OFF);
 ```
-Herefter starter man web serveren:  
+Then you start the web server:
 ```C
 server.begin();
 ```
-I loop(), kører man konstant en funktion kaldet ``handleClient()``:  
+In loop(), you continuously run a function called ``handleClient()``:
 ```C
-// Funktionen sørger for at indkommende requests fra browseren håndteres
+// This function ensures that incoming requests from the browser are handled
 server.handleClient();
 ```
-Som blev vist før, skal man have funktioner for at håndtere hvis man f.eks. går ind på ``192.168.1.1/Knap1_ON``. Altså man skal have handleKnap1ON/OFF implementeret. Den kan f.eks. ligne:  
+As shown before, you need functions to handle when someone navigates to e.g. ``192.168.1.1/Button1_ON``. So you need handleButton1ON/OFF implemented. It can look like this:
 ```C
-void handleKnap1ON() {
+void handleButton1ON() {
     LEDState = "on";
     pixel.show();
     handleRoot();
 }
 
-void handleKnap1OFF() {
+void handleButton1OFF() {
     LEDState = "off";
     pixel.clear();
     handleRoot();
 }
 ```
-Selve funktionen for at generere websiden er ``handleRoot()``, den sender HTML og CSS for at generere siden, HTML og CSS teksten nødvendig, gemmes i ``html`` variablen.  
+The function that generates the web page is ``handleRoot()``. It sends HTML and CSS to generate the page; the necessary HTML and CSS text is stored in the ``html`` variable.
 ```C
 void handleRoot() {
   String html = "<!DOCTYPE html><html><head><meta name=\"viewport\"
                  content=\"width=device-width, initial-scale=1\">";
   html += "<link rel=\"icon\" href=\"data:,\">";
-  html += "<style>html { font-family: Helvetica; display: inline-block; 
+  html += "<style>html { font-family: Helvetica; display: inline-block;
            margin: 0px auto; text-align: center;}";
-  html += ".button { background-color: #4CAF50; border: none; color: white; 
-           padding: 16px 40px; text-decoration: none; font-size: 30px; 
+  html += ".button { background-color: #4CAF50; border: none; color: white;
+           padding: 16px 40px; text-decoration: none; font-size: 30px;
            margin: 2px; cursor: pointer;}";
   html += ".button2 { background-color: #555555; }</style></head>";
   html += "<body><h1>ESP32 Web Server</h1>";
 
-// Vis knappen ift. LEDState
-html += "<p>Knap1 - State " + LEDState + "</p>";
+// Show the button based on LEDState
+html += "<p>Button1 - State " + LEDState + "</p>";
   if (LEDState == "off") {
-    html += "<p><a href=\"/Knap1_ON\"><button class=\"button\">ON</button></a></p>";
+    html += "<p><a href=\"/Button1_ON\"><button class=\"button\">ON</button></a></p>";
   } else {
-    html += "<p><a href=\"/Knap1_OFF\"><button 
+    html += "<p><a href=\"/Button1_OFF\"><button
              class=\"button button2\">OFF</button></a></p>";
   }
 
 }
 ```
-Til sidst, i samme HTML blok, sendes websiden til mobilen eller PC'en på linket.
+Finally, in the same HTML block, the web page is sent to the phone or PC at the link.
 ```C
 html += "</body></html>";
 server.send(200, "text/html", html);
 ```
-# Zigbee - Fundamentale funktioner
-For at få ZB til at fungere, skal pakken inkluderes med:
+# Zigbee - Fundamental Functions
+To get Zigbee working, the package must be included with:
 ```C
 #include "Zigbee.h"
 ```
-Derefter skal rollen defineres udenfor setup() med:
+Then the role must be defined outside of setup() with:
 ```C
-zigbee_role_t role = ZIGBEE_COORDINATOR; // ESP skanner ikke sig selv med denne funktion
-                                         // Kun en coordinator per netværk
-                                         // Starter og ejer netværket
+zigbee_role_t role = ZIGBEE_COORDINATOR; // ESP does not scan itself with this function
+                                         // Only one coordinator per network
+                                         // Starts and owns the network
 
 
-zigbee_role_t role = ZIGBEE_ROUTER;      // ESP kan kommunikere + kunne scanne
-                                         // Videresender data mellem coordinator og andre noder.
-                                         // God balance mellem funktionalitet og fleksibilitet.
+zigbee_role_t role = ZIGBEE_ROUTER;      // ESP can communicate + scan
+                                         // Forwards data between coordinator and other nodes.
+                                         // Good balance between functionality and flexibility.
 
-zigbee_role_t role = ZIGBEE_END_DEVICE;  // ESP er som sensor
-                                         // Sparer strøm, fordi den sover meget af tiden.
+zigbee_role_t role = ZIGBEE_END_DEVICE;  // ESP acts as a sensor
+                                         // Saves power, because it sleeps most of the time.
 
 
 ```
-# Scanning af netværk
-Disse kode eksempler er så efter skanningen er udført, de bruges i en funktion til at printe resultaterne fra skanningen:
+# Network Scanning
+These code examples are for after the scan is complete; they are used in a function to print the scan results:
 ```C
 zigbee_scan_result_t *scan_result = Zigbee.getScanResult();
 ```
-Resultaterne fra dette skan, kan fås med disse kommandoer:
+The results from this scan can be retrieved with these commands:
 ```C
-scan_result[i].short_pan_id         // Henter 16-bit netværks ID, f.eks. 0x4A8C
-scan_result[i].logic_channel        // Henter ZB-kanal (11-26), f.eks. 15
-scan_result[i].permit_joining       // Henter status på åbenhed (JA/NEJ), f.eks. JA
-scan_result[i].router_capacity      // Henter om der er plads til flere routers på netværket, f.eks. NEJ
-scan_result[i].end_device_capacity  // Henter om der er plads til flere end devices, f.eks. JA
-scan_result[i].extended_pan_id[j]   // Henter den udvidede 64-bit netværks ID (som MAC-adresse) f.eks. a1:b2:c3...
+scan_result[i].short_pan_id         // Gets the 16-bit network ID, e.g. 0x4A8C
+scan_result[i].logic_channel        // Gets the ZB channel (11-26), e.g. 15
+scan_result[i].permit_joining       // Gets the joining permission status (YES/NO), e.g. YES
+scan_result[i].router_capacity      // Gets whether there is room for more routers on the network, e.g. NO
+scan_result[i].end_device_capacity  // Gets whether there is room for more end devices, e.g. YES
+scan_result[i].extended_pan_id[j]   // Gets the extended 64-bit network ID (like a MAC address) e.g. a1:b2:c3...
 ```
-OUTPUT-EKSEMPEL:  
+OUTPUT EXAMPLE:
 ```C
 0x4A8C | 15 | Yes           | No             | Yes                | 00:12:4b:00:1a:2b:3c:4d
 ```
-Når ``Zigbee.getScanResult();`` er kørt, kører man:  
+After ``Zigbee.getScanResult();`` has been run, you run:
 ```C
 Zigbee.scanDelete();
 ```
-For at spare på hukommelse brugt
+To free up the memory used.
 # Setup
-Når man er i ``void setup()`` kan man starte ZB på ESPen med den rolle man satte helt inden setup og de fundamentale funktioner:  
+When inside ``void setup()`` you can start Zigbee on the ESP with the role that was set before setup and the fundamental functions:
 ```C
 Zigbee.begin(role)
-``` 
-Hvis den er begyndt succesfuldt, kan man starte skanningen:  
+```
+If it has started successfully, you can begin scanning:
 ```C
 Zigbee.scanNetworks();
 ```
