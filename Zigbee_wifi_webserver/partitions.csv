@@ -1,0 +1,13 @@
+# Single-app 4 MB layout based on Espressif's Zigbee ZCZR partition scheme.
+# The larger app partition is required because Wi-Fi, Zigbee, and the embedded
+# control page do not fit in the standard 1.25 MB application slot.
+# USB flashing only; this layout does not provide an OTA update slot.
+# Name,     Type, SubType, Offset,  Size, Flags
+nvs,        data, nvs,     0x9000,  0x5000,
+otadata,    data, ota,     0xe000,  0x2000,
+app0,       app,  factory, 0x10000, 0x280000,
+spiffs,     data, spiffs,  0x290000,0x15A000,
+zb_storage, data, fat,     0x3EA000,0x4000,
+zb_fct,     data, fat,     0x3EE000,0x1000,
+rcp_fw,     data, spiffs,  0x3EF000,0x1000,
+coredump,   data, coredump,0x3F0000,0x10000,
