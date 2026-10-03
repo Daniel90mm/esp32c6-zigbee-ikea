@@ -68,6 +68,43 @@ The onboard status light indicates:
 If an old Zigbee network prevents pairing, erase the ESP32 flash from the
 Arduino IDE and upload the sketch again.
 
+### Pairing questions
+
+**Do I need the IKEA TRADFRI hub?** No. The ESP32-C6 is the Zigbee
+coordinator, so it takes the hub's place. A bulb belongs to one Zigbee network
+at a time, so if your bulb is already on a hub, unplug the hub and reset the
+bulb (step 2 above) so it leaves that network. This project has never been used
+with a hub, only with an IKEA remote.
+
+**Which Zigbee mode do I choose?** `Zigbee ZCZR (coordinator/router)` in the
+Arduino IDE, as in the flashing steps. The sketch already starts the board as
+the coordinator (`Zigbee.begin(ZIGBEE_COORDINATOR)`), so there is nothing to
+change in the code.
+
+**Do I need to reset the bulb first?** The reset is the pairing step. Switch
+the bulb's power off and on six times, ending with the bulb on, and it starts
+looking for a network to join. A bulb that is still paired to another network
+will not join this one.
+
+**Before or after opening the network?** The sketch opens pairing by itself
+when it boots, for 180 seconds, and reopens it every 170 seconds until a bulb
+is bound. You never call `Zigbee.openNetwork()` yourself. Power the ESP32 first,
+wait for the amber breathing light, then reset the bulb. `/pair` or the serial
+command `pair` opens the window again on demand.
+
+**What is endpoint 5?** The ESP32's own Zigbee endpoint (`SWITCH_ENDPOINT`). It
+acts as a dimmer switch that sends on/off, level and colour-temperature
+commands to the bulb it is bound to. Once the bulb joins, the Zigbee stack
+binds it to this endpoint, and every command goes out through that binding
+rather than to the bulb's address. This IKEA bulb only responds to it that
+way. It is not something you configure.
+
+**Can I add more than one bulb, or an IKEA LED driver?** Not as written. The
+sketch binds exactly one device (`allowMultipleBinding(false)`). I have only
+tested a dimmable white-spectrum bulb. Other Zigbee lights may work if they
+accept the standard on/off, level and colour-temperature commands, but that is
+untested.
+
 ## Wake-light behavior
 
 The built-in daily alarm uses the `Europe/Copenhagen` timezone and obtains the
